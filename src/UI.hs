@@ -66,7 +66,7 @@ main = do
 -- Handling events
 
 handleEvent :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
-handleEvent g (AppEvent Tick)                       = continue $ step g
+handleEvent g (AppEvent Tick)                       = liftIO (step g) >>= continue
 handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ turn North g
 handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ turn South g
 handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ turn East g
@@ -110,12 +110,12 @@ drawGrid g = withBorderStyle BS.unicodeBold
   $ B.borderWithLabel (str "Snake")
   $ vBox rows
   where
-    rows         = [hBox $ cellsInRow r | r <- [height-1,height-2..0]]
-    cellsInRow y = [drawCoord (V2 x y) | x <- [0..width-1]]
+    rows         = [hBox $ cellsInRow r | r <- [height,height-1..1]]
+    cellsInRow y = [drawCoord (V2 x y) | x <- [1..width]]
     drawCoord    = drawCell . cellAt
     cellAt c
       | c `elem` g ^. snake = Snake
-      | c == g ^. food      = Food
+      | c `elem` g ^. food  = Food
       | otherwise           = Empty
 
 drawCell :: Cell -> Widget Name
