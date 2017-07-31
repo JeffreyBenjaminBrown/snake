@@ -68,7 +68,6 @@ eatFood g = do
                & snake %~ (nh g <|)
     nf <- nextFood ng
     return $ ng & food .~ nf
-      -- new game's food coordinate is new food
 
 -- | Move snake along in a marquee fashion
 move :: Game -> Maybe Game
