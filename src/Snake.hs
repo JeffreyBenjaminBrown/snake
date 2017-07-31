@@ -39,8 +39,8 @@ makeLenses ''Game
 -- Constants
 
 height, width :: Int
-height = 20
-width  = 20
+height = 13
+width  = 13
 
 -- Functions
 
@@ -136,7 +136,7 @@ randomCoord = V2 <$> randomRIO (1, width)
 -- | Initialize a paused game with random food location
 initGame :: IO Game
 initGame = do
-  let g = Game { _snake = (S.singleton (V2 10 10))
+  let g = Game { _snake = S.fromList [V2 0 y | y <- [1..10]]
                , _dir = North
                , _food = [V2 0 0, V2 5 5]
                , _score = 0

@@ -29,6 +29,7 @@ import qualified Data.Sequence as S
 import Linear.V2 (V2(..))
 import Lens.Micro ((^.))
 
+
 -- Types
 
 -- | Ticks mark passing of time
@@ -44,6 +45,7 @@ type Name = ()
 
 data Icon = Snake | Food | Black
 
+
 -- App definition
 
 app :: App Game Tick Name
@@ -56,12 +58,15 @@ app = App { appDraw = ui
 
 main :: IO ()
 main = do
-  chan <- newBChan 10
+  chan <- newBChan 1
+    -- was 10, but I think 1 is enough, because the writes (explicit below)
+    -- and reads (implicit in event loop) happen at the same rate, 1 per loop
   forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 100000 -- decides how fast your game moves
+    threadDelay 100000 -- determines how fast your game moves
   g <- initGame
   void $ customMain (V.mkVty V.defaultConfig) (Just chan) app g
+
 
 -- Handling events
 
@@ -80,21 +85,23 @@ handleEvent g (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt g
 handleEvent g (VtyEvent (V.EvKey V.KEsc []))        = halt g
 handleEvent g _                                     = continue g
 
+
 -- Drawing
 
 ui :: Game -> [Widget Name]
 ui g =
   [ C.center $ padRight (Pad 2) (statsWidget g) <+> gridWidget g ]
+  -- that's a +, not a *, in the < >
 
 statsWidget :: Game -> Widget Name
-statsWidget g = hLimit 11
+statsWidget g = hLimit 15
   $ vBox [ scoreWidget (g ^. score)
          , padTop (Pad 2) $ gameOverWidget (g ^. dead)
          ]
 
 scoreWidget :: Int -> Widget Name
 scoreWidget n = withBorderStyle BS.unicodeBold
-  $ B.borderWithLabel (str "Score")
+  $ B.borderWithLabel (str "score")
   $ C.hCenter
   $ padAll 1
   $ str $ show n
@@ -112,7 +119,8 @@ gridWidget g = withBorderStyle BS.unicodeBold
   $ B.borderWithLabel (str "Snake")
   $ vBox rows
   where
-    rows         = [hBox $ cellsInRow r | r <- [height,height-1..1]]
+    rows         = [hBox $ cellsInRow r
+                   | r <- [height, height-1 .. 1] ]
     cellsInRow y = [iconWidget . iconAt $ (V2 x y)
                    | x <- [1..width]]
     iconAt c
