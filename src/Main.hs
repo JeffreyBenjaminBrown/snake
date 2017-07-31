@@ -3,3 +3,5 @@ module Main
   ) where
 
 import UI (main)
+import qualified Tests as T
+
