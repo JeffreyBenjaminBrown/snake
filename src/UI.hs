@@ -102,7 +102,9 @@ scoreWidget n = withBorderStyle BS.unicodeBold
 gameOverWidget :: Bool -> Widget Name
 gameOverWidget dead =
   if dead
-     then withAttr gameOverAttr $ C.hCenter $ str "NOW YOU ARE IN HEAVEN"
+     then withAttr gameOverAttr $ vBox
+          $ map (C.hCenter . str)
+          $ ["NOW YOU ARE","IN HEAVEN"]
      else emptyWidget
 
 gridWidget :: Game -> Widget Name
@@ -111,8 +113,8 @@ gridWidget g = withBorderStyle BS.unicodeBold
   $ vBox rows
   where
     rows         = [hBox $ cellsInRow r | r <- [height,height-1..1]]
-    cellsInRow y = [drawCoord (V2 x y) | x <- [1..width]]
-    drawCoord    = iconWidget . iconAt
+    cellsInRow y = [iconWidget . iconAt $ (V2 x y)
+                   | x <- [1..width]]
     iconAt c
       | c `elem` g ^. snake = Snake
       | c `elem` g ^. food  = Food
