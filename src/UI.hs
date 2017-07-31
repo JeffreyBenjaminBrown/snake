@@ -42,7 +42,7 @@ data Tick = Tick
 -- if we call this "Name" now.
 type Name = ()
 
-data Cell = Snake | Food | Empty
+data Icon = Snake | Food | Black
 
 -- App definition
 
@@ -102,7 +102,7 @@ scoreWidget n = withBorderStyle BS.unicodeBold
 gameOverWidget :: Bool -> Widget Name
 gameOverWidget dead =
   if dead
-     then withAttr gameOverAttr $ C.hCenter $ str "GAME OVER"
+     then withAttr gameOverAttr $ C.hCenter $ str "NOW YOU ARE IN HEAVEN"
      else emptyWidget
 
 gridWidget :: Game -> Widget Name
@@ -112,16 +112,16 @@ gridWidget g = withBorderStyle BS.unicodeBold
   where
     rows         = [hBox $ cellsInRow r | r <- [height,height-1..1]]
     cellsInRow y = [drawCoord (V2 x y) | x <- [1..width]]
-    drawCoord    = cellWidget . cellAt
-    cellAt c
+    drawCoord    = iconWidget . iconAt
+    iconAt c
       | c `elem` g ^. snake = Snake
       | c `elem` g ^. food  = Food
-      | otherwise           = Empty
+      | otherwise           = Black
 
-cellWidget :: Cell -> Widget Name
-cellWidget Snake = withAttr snakeAttr cw
-cellWidget Food  = withAttr foodAttr cw
-cellWidget Empty = withAttr emptyAttr cw
+iconWidget :: Icon -> Widget Name
+iconWidget Snake = withAttr snakeAttr cw
+iconWidget Food  = withAttr foodAttr cw
+iconWidget Black = withAttr blackAttr cw
 
 cw :: Widget Name -- "current widget"?
 cw = str "  " -- two spaces looks like a square
@@ -137,7 +137,7 @@ theMap = attrMap V.defAttr
 gameOverAttr :: AttrName
 gameOverAttr = "gameOver"
 
-snakeAttr, foodAttr, emptyAttr :: AttrName
+snakeAttr, foodAttr, blackAttr :: AttrName
 snakeAttr = "snakeAttr"
 foodAttr = "foodAttr"
-emptyAttr = "emptyAttr"
+blackAttr = "blackAttr"
