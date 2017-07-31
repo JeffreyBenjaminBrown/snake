@@ -120,6 +120,7 @@ outOfBounds c = any (< 1) c || c ^. _x > width || c ^. _y > height
 
 -- | Get a valid next food coordinate
 nextFood :: Game -> IO [Coord]
+  -- In the original, this is Game -> Game, through the magic of Sequence.
 nextFood g = do
   c1 <- randomCoord
   c2 <- randomCoord

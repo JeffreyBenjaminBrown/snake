@@ -47,7 +47,7 @@ data Cell = Snake | Food | Empty
 -- App definition
 
 app :: App Game Tick Name
-app = App { appDraw = drawUI
+app = App { appDraw = ui
           , appChooseCursor = neverShowCursor
           , appHandleEvent = handleEvent
           , appStartEvent = return
@@ -82,49 +82,50 @@ handleEvent g _                                     = continue g
 
 -- Drawing
 
-drawUI :: Game -> [Widget Name]
-drawUI g =
-  [ C.center $ padRight (Pad 2) (drawStats g) <+> drawGrid g ]
+ui :: Game -> [Widget Name]
+ui g =
+  [ C.center $ padRight (Pad 2) (statsWidget g) <+> gridWidget g ]
 
-drawStats :: Game -> Widget Name
-drawStats g = hLimit 11
-  $ vBox [ drawScore (g ^. score)
-         , padTop (Pad 2) $ drawGameOver (g ^. dead)
+statsWidget :: Game -> Widget Name
+statsWidget g = hLimit 11
+  $ vBox [ scoreWidget (g ^. score)
+         , padTop (Pad 2) $ gameOverWidget (g ^. dead)
          ]
 
-drawScore :: Int -> Widget Name
-drawScore n = withBorderStyle BS.unicodeBold
+scoreWidget :: Int -> Widget Name
+scoreWidget n = withBorderStyle BS.unicodeBold
   $ B.borderWithLabel (str "Score")
   $ C.hCenter
   $ padAll 1
   $ str $ show n
 
-drawGameOver :: Bool -> Widget Name
-drawGameOver dead =
+gameOverWidget :: Bool -> Widget Name
+gameOverWidget dead =
   if dead
      then withAttr gameOverAttr $ C.hCenter $ str "GAME OVER"
      else emptyWidget
 
-drawGrid :: Game -> Widget Name
-drawGrid g = withBorderStyle BS.unicodeBold
+gridWidget :: Game -> Widget Name
+gridWidget g = withBorderStyle BS.unicodeBold
   $ B.borderWithLabel (str "Snake")
   $ vBox rows
   where
     rows         = [hBox $ cellsInRow r | r <- [height,height-1..1]]
     cellsInRow y = [drawCoord (V2 x y) | x <- [1..width]]
-    drawCoord    = drawCell . cellAt
+    drawCoord    = cellWidget . cellAt
     cellAt c
       | c `elem` g ^. snake = Snake
       | c `elem` g ^. food  = Food
       | otherwise           = Empty
 
-drawCell :: Cell -> Widget Name
-drawCell Snake = withAttr snakeAttr cw
-drawCell Food  = withAttr foodAttr cw
-drawCell Empty = withAttr emptyAttr cw
+cellWidget :: Cell -> Widget Name
+cellWidget Snake = withAttr snakeAttr cw
+cellWidget Food  = withAttr foodAttr cw
+cellWidget Empty = withAttr emptyAttr cw
 
-cw :: Widget Name
-cw = str "  "
+cw :: Widget Name -- "current widget"?
+cw = str "  " -- two spaces looks like a square
+  -- make it one space, and the whole board becomes skinny
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
