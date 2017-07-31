@@ -47,27 +47,33 @@ width  = 20
 -- | Step forward in time
 step :: Game -> IO Game
 step g = fromMaybe (return g) $ do
-  guard (not $ g ^. paused || g ^. dead)
+  guard $ not $ g ^. paused || g ^. dead
   let g' = g & frozen .~ False
   (pure <$> die g') <|> eatFood g' <|> (pure <$> move g')
 
 -- | Possibly die if next head position is disallowed
 die :: Game -> Maybe Game
 die g = do
-  guard (bodyHit || borderHit)
+  guard $ bodyHit || borderHit
   return $ g & dead .~ True
   where bodyHit   = nh g `elem` g ^. snake
         borderHit = outOfBounds (nh g)
 
 -- | Possibly eat food if next head position is food
 eatFood :: Game -> Maybe (IO Game)
+  -- Why did I change this from Maybe Game to Maybe (IO Game)?
+  -- It happened at commit a6b54962a8aaadcd5882193404eaeb3fa6951b1b
+  -- where I changed it from one food to two.
 eatFood g = do
   guard $ elem (nh g) (g ^. food)
   return $ do
-    let ng = g & score %~ (+10)
+    -- Abbreviated. Before, ng was defined with food and score updates,
+    -- then the next food was pulled, and then the return value created.
+    -- This seems to do the same thing.
+    nf <- nextFood g
+    return $ g & food .~ nf
+               & score %~ (+10)
                & snake %~ (nh g <|)
-    nf <- nextFood ng
-    return $ ng & food .~ nf
 
 -- | Move snake along in a marquee fashion
 move :: Game -> Maybe Game
@@ -98,15 +104,16 @@ turn :: Direction -> Game -> Game
 turn d g =
   if g ^. frozen
      then g
-     else g & dir %~ (turnDir d)
+     else g & dir %~ turnDir d
             & paused .~ False
             & frozen .~ True
 
+-- no turning backwards
 turnDir :: Direction -> Direction -> Direction
 turnDir n c
   | c `elem` [North, South] && n `elem` [East, West] = n
   | c `elem` [East, West] && n `elem` [North, South] = n
-  | otherwise                             = c
+  | otherwise                                        = c
 
 outOfBounds :: Coord -> Bool
 outOfBounds c = any (< 1) c || c ^. _x > width || c ^. _y > height
@@ -128,8 +135,12 @@ randomCoord = V2 <$> randomRIO (1, width)
 -- | Initialize a paused game with random food location
 initGame :: IO Game
 initGame = do
-  let g = Game { _snake = (S.singleton (V2 10 10)) , _dir = North
-               , _food = [V2 0 0, V2 5 5], _score = 0
-               , _dead = False, _paused = True , _frozen = False }
+  let g = Game { _snake = (S.singleton (V2 10 10))
+               , _dir = North
+               , _food = [V2 0 0, V2 5 5]
+               , _score = 0
+               , _dead = False
+               , _paused = True
+               , _frozen = False }
   nf <- nextFood g
   return $ g & food .~ nf
